@@ -1,0 +1,35 @@
+skills/create-agent-bundle/references/agents-md.md
+  4f659a6df4b9b6f6 1,3-11,24-28,83,85-87,96-99
+skills/create-agent-bundle/references/tools-md.md
+  4f659a6df4b9b6f6 1,3-6,8,81-83
+skills/create-agent-bundle/references/examples/cto.md
+  4f659a6df4b9b6f6 1-93,185-191
+skills/create-agent-bundle/SKILL.md
+  4f659a6df4b9b6f6 4-9,15-18,20-21,23-31,39-40,44-48,50,52-72,74-91,100-148,152-157,163-164,166-180,186-192,194-197,199,204,206-207,209-212
+skills/create-agent-bundle/references/examples/engineer.md
+  4f659a6df4b9b6f6 1-79,152-158
+skills/create-agent-bundle/references/soul-md.md
+  4f659a6df4b9b6f6 1,3-7,9-11,15,46-48,54,83
+skills/create-agent-bundle/references/heartbeat-md.md
+  4f659a6df4b9b6f6 1,3-6,8-9,13,43,50-52,58
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.0",
+  "base_commit_sha": "741b4c26b2059008c2b36f6924afde32e148a365",
+  "prompts": {
+    "4f659a6df4b9b6f6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "38ed9017-e640-4730-bfb1-7468b244ace0",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Richard Tuin",
+      "messages": [],
+      "total_additions": 569,
+      "total_deletions": 482,
+      "accepted_lines": 569,
+      "overriden_lines": 0
+    }
+  }
+}
