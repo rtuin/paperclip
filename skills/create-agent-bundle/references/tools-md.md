@@ -23,8 +23,10 @@ purpose is to reserve the slot so the agent has a canonical place to write
 (Your tools will go here. Add notes about them as you acquire and use them.)
 ```
 
-This matches Paperclip's default CEO onboarding bundle and is the right
-default when the user hasn't listed specific tools.
+This is the right default when the user hasn't listed specific tools. Many
+orchestrators that follow this bundle convention (OpenClaw, Paperclip, and
+others) ship new agents with this exact stub and expect the agent to fill it
+in as it learns.
 
 ## Populated form
 
@@ -35,7 +37,7 @@ systems, etc.), not alphabetically.
 ```markdown
 # Tools
 
-## <Category — e.g. "Paperclip API">
+## <Category — e.g. "Task tracker", "Source control", "Memory">
 
 ### <tool name>
 
@@ -83,11 +85,11 @@ solves and what alternative you should prefer when.
 
 If you need to draw tools out of the user, ask about:
 
-- Control plane / orchestration APIs (Paperclip, OpenClaw, your own harness).
-- Code tools (git, GitHub, package managers, test runners).
+- Orchestration / task-tracker APIs (whatever the agent's loop talks to).
+- Code tools (git, GitHub, package managers, test runners, linters).
 - Shell / filesystem scope (what paths can the agent read, write, exec).
 - External services (Slack, email, ticket tracker, analytics, databases).
-- Memory / knowledge stores (vector DB, note files, PARA folders).
+- Memory / knowledge stores (vector DB, note files, PARA folders, wikis).
 - Secrets sources (env vars, vault, KMS).
 
 ## Quality bar

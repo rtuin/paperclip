@@ -2,25 +2,29 @@
 name: create-agent-bundle
 description: >
   Generate a four-file agent bundle (AGENTS.md, SOUL.md, HEARTBEAT.md, TOOLS.md)
-  that defines an OpenClaw/NanoClaw-style agent. Use when the user asks to
-  "create an agent", "scaffold an agent", "write a soul file", or otherwise
-  wants a filesystem-backed agent definition that a runtime (Paperclip,
-  OpenClaw, Claude Code adapter, or bespoke harness) can load as its
-  personality + operating loop. This skill writes files; it does NOT call any
-  control-plane API.
+  that defines a long-running, filesystem-backed agent. Use when the user asks
+  to "create an agent", "scaffold an agent", "write a soul file", or otherwise
+  wants a durable markdown agent definition that any runtime (Claude Code
+  harness, OpenClaw/NanoClaw, Paperclip, a bespoke loop) can load as its
+  personality plus operating loop. This skill writes files; it does NOT call
+  any control-plane API.
 ---
 
 # Create Agent Bundle
 
 Use this skill when the user wants to scaffold an agent as a set of markdown
-files. The output is the exact bundle shape Paperclip's `claude_local` and
-OpenClaw-style adapters load at runtime: a single entry file (`AGENTS.md`) that
-references three siblings describing identity (`SOUL.md`), loop (`HEARTBEAT.md`),
-and capabilities (`TOOLS.md`).
+files. The output is a runtime-agnostic bundle: a single entry file
+(`AGENTS.md`) that references three siblings describing identity (`SOUL.md`),
+loop (`HEARTBEAT.md`), and capabilities (`TOOLS.md`).
+
+This convention was popularized by OpenClaw/NanoClaw and is used by several
+orchestrators (Paperclip's `claude_local` adapter, bare Claude Code harnesses,
+custom loops). The files themselves have no vendor lock-in — they're just
+markdown.
 
 This is NOT for creating Claude Code sub-agents (those live in
 `.claude/agents/*.md` with YAML frontmatter and are a different format). This
-is for "proper" agents — long-running personas with an execution loop.
+is for "proper" agents: long-running personas with an execution loop.
 
 ## When to invoke
 
@@ -28,13 +32,14 @@ Trigger on any of:
 
 - "create an agent", "scaffold an agent", "new agent"
 - "write a soul.md", "generate AGENTS.md for X"
-- "I need a CTO agent" / "hire an X" when the user wants files, not an API call
-- "agent files like paperclip does"
+- "I need a CTO agent" / "scaffold an X" when the user wants files
+- "agent files in the OpenClaw style"
 
 Do NOT invoke for:
 
 - Claude Code sub-agents in `.claude/agents/` — those use a different schema.
-- Hiring via a live Paperclip instance — use `paperclip-create-agent` instead.
+- Hiring via a running orchestrator's API (e.g. a live Paperclip instance) —
+  use that orchestrator's own create-agent workflow.
 
 ## The bundle shape
 
@@ -46,9 +51,8 @@ Do NOT invoke for:
   TOOLS.md       # tools the agent can use, with usage notes
 ```
 
-`AGENTS.md` is the **entry** — many adapters (Paperclip `claude_local`, Claude
-Code itself, and OpenClaw) pick it up by name. The other three are sibling
-references that `AGENTS.md` tells the agent to read.
+`AGENTS.md` is the **entry** — most runtimes pick it up by name. The other
+three are sibling references that `AGENTS.md` tells the agent to read.
 
 ## Workflow
 
@@ -61,8 +65,12 @@ Ask the user (one compact question block, not a quiz):
 3. **Scope of ownership** — what they own; what they delegate; what they refuse.
 4. **Reporting** — do they report to someone, and do they have reports?
 5. **Voice/tone** — direct, warm, terse, scholarly? Any forbidden phrases?
-6. **Tools** — which external systems, CLIs, or APIs this agent uses.
-7. **Target directory** — absolute path where the bundle should land. Default:
+6. **Runtime (optional)** — where will this run (Claude Code, OpenClaw,
+   Paperclip, custom harness)? Only ask if it changes what you write into
+   `HEARTBEAT.md` or `TOOLS.md`. If the user doesn't know or doesn't care,
+   default to runtime-agnostic prose.
+7. **Tools** — which external systems, CLIs, or APIs this agent uses.
+8. **Target directory** — absolute path where the bundle should land. Default:
    `./agents/<role-slug>/` under the current working directory.
 
 If the user gave you a rich brief already (a paragraph describing the role),
@@ -81,6 +89,11 @@ read the reference before drafting that file.
 
 Keep the four files coherent with each other. The mission stated in `AGENTS.md`
 must be reflected by `SOUL.md`'s posture and `HEARTBEAT.md`'s checklist.
+
+If the user named a specific runtime, you may bind concrete endpoints, env
+vars, or CLI commands in `HEARTBEAT.md` / `TOOLS.md`. Otherwise, keep those
+files runtime-agnostic — use placeholders like `<orchestrator>` / `<task-id
+env var>` / "your task-tracker API" and let the operator bind them later.
 
 ### 3. Write to disk
 
@@ -101,19 +114,24 @@ Print a short summary:
 
 ## Wiring into a runtime
 
-The bundle is runtime-agnostic. Common wiring:
+The bundle is runtime-agnostic. Common wiring patterns:
 
-- **Paperclip `claude_local` adapter**: set `adapterConfig.instructionsFilePath`
-  to the absolute path of the bundle's `AGENTS.md`. The adapter reads it and
-  the sibling files automatically. The bundle can also be uploaded via the
-  managed-bundle endpoints — see `server/src/services/agent-instructions.ts`
-  in the Paperclip repo for the API.
+- **Bare Claude Code / CLI harness**: concatenate the files as the system
+  prompt, or pass `AGENTS.md` via an `--append-system-prompt-file`-style flag
+  and let the agent itself read the siblings at runtime. Point Claude Code at
+  the bundle directory as its working directory so relative paths resolve.
+- **Claude Code sub-agent wrapper**: have your sub-agent's system prompt
+  include `Read ./AGENTS.md and the three sibling files before starting.`
+  Keep the sub-agent's own frontmatter tight — the bundle carries the body.
 - **OpenClaw / NanoClaw**: point the agent's working directory at the bundle
-  root. OpenClaw resolves `AGENTS.md` as the primary instruction file and
-  `SOUL.md`/`HEARTBEAT.md`/`TOOLS.md` as sibling references.
-- **Bespoke Claude Code harness**: concatenate the files as the system prompt,
-  or pass `AGENTS.md` via `--append-system-prompt-file` and let the agent
-  itself read the siblings at runtime.
+  root. The runtime resolves `AGENTS.md` as the primary instruction file and
+  `SOUL.md` / `HEARTBEAT.md` / `TOOLS.md` as sibling references.
+- **Paperclip `claude_local` adapter**: set `adapterConfig.instructionsFilePath`
+  to the absolute path of the bundle's `AGENTS.md`. The adapter loads it and
+  the sibling files automatically.
+- **Bespoke orchestrator / cron loop**: read and inline all four files into
+  the system prompt each wake, or mount the directory and instruct the agent
+  to re-read it on every invocation.
 
 ## Quality bar
 
@@ -134,6 +152,8 @@ Before finishing:
 - No emoji unless the user asked.
 - No placeholder text like `TODO: fill this in` in the final files. Either
   write real content or remove the section.
+- If the user didn't name a runtime, don't hardcode one. Prefer
+  `<orchestrator>` / `<task-tracker>` placeholders over a concrete API.
 
 ## Examples
 
@@ -142,5 +162,7 @@ Two reference bundles live under `references/examples/`:
 - `references/examples/cto/` — engineering leader with reports
 - `references/examples/engineer/` — individual contributor with no reports
 
-Read them when you need a concrete shape. Do not copy them verbatim — the
-agent's mission and voice must be specific to what the user asked for.
+Both are deliberately runtime-agnostic — they show the *shape* of a good
+bundle without binding to a specific orchestrator's API. Read them when you
+need a concrete shape. Do not copy them verbatim: the agent's mission and
+voice must be specific to what the user asked for.

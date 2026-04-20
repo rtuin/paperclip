@@ -1,26 +1,26 @@
 # HEARTBEAT.md -- Engineer Heartbeat Checklist
 
-Run this every heartbeat.
+Run this every heartbeat. Concrete endpoints, env var names, and CLI commands depend on the runtime you're wired into — treat the placeholders below as slots your operator has bound (task tracker, source forge, CI).
 
 ## 1. Identity and Context
 
-- `GET /api/agents/me` — confirm your id and reporting line.
-- Check wake context: `PAPERCLIP_TASK_ID`, `PAPERCLIP_WAKE_REASON`, `PAPERCLIP_WAKE_COMMENT_ID`.
+- Confirm who you are and your reporting line against the task tracker.
+- Check wake context from the environment: the task id you were woken for, the wake reason (new task / new comment / scheduled heartbeat), and any triggering comment id.
 
 ## 2. Get Assignments
 
-- `GET /api/companies/{companyId}/issues?assigneeAgentId={your-id}&status=todo,in_progress,in_review,blocked`
+- Query the task tracker for tasks assigned to you, filtered by active statuses (`todo`, `in_progress`, `in_review`, `blocked`).
 - Priority: `in_progress` → `in_review` (if woken by a review comment) → `todo`. Skip `blocked` unless the blocker is now cleared.
-- If `PAPERCLIP_TASK_ID` is set and assigned to you, start there.
+- If the runtime pinned a specific task id in the wake context, start there.
 
 ## 3. Checkout
 
-- For a `todo` you plan to start, `POST /api/issues/{id}/checkout`. This flips it to `in_progress` and claims the worktree.
-- Never retry a 409 — that task belongs to someone else.
+- For a `todo` you plan to start, claim it through the task tracker's checkout/assign call. This should flip it to `in_progress` and reserve any shared workspace (worktree, branch) the task uses.
+- If the tracker returns "already claimed" (HTTP 409 or equivalent), don't retry — that task belongs to someone else.
 
 ## 4. Plan in Public
 
-Before you code, leave a plan comment on the issue:
+Before you code, leave a plan comment on the task:
 
 - Two to four lines.
 - What you'll change, in which files, and how you'll verify.
@@ -30,17 +30,17 @@ Before you code, leave a plan comment on the issue:
 
 - Write the change. Run the relevant tests locally.
 - Keep the diff scoped to the stated plan. Don't expand.
-- If you discover incidental cleanup, open a separate issue — don't sneak it into this PR.
+- If you discover incidental cleanup, open a separate task — don't sneak it into this PR.
 
 ## 6. Open the PR
 
-- Push the branch. Open a PR.
+- Push the branch. Open a PR on whatever forge the repo lives on (GitHub, GitLab, Gitea, …).
 - Description template:
   - **What** — one sentence.
-  - **Why** — the motivation / the bug / the linked issue.
+  - **Why** — the motivation / the bug / the linked task.
   - **How to verify** — commands or steps a reviewer can run.
   - **Out of scope** — anything you consciously did not touch.
-- Move the issue to `in_review`. Link the PR.
+- Move the task to `in_review`. Link the PR.
 
 ## 7. Respond to Review
 
@@ -52,8 +52,8 @@ If you were woken by a review comment:
 
 ## 8. Exit
 
-- If the PR is merged and the issue is `done`, close cleanly.
-- If you're mid-change, comment on the issue with what's left and exit.
+- If the PR is merged and the task is `done`, close cleanly.
+- If you're mid-change, comment on the task with what's left and exit.
 - If you're blocked, set status `blocked`, name the blocker, and @ the person or team who can unblock you.
 
 ---
@@ -67,7 +67,7 @@ If you were woken by a review comment:
 
 ## Rules
 
-- Always include `X-Paperclip-Run-Id` on mutating API calls.
-- Always comment when you change issue status.
+- Include any required correlation id (run id, trace id) on mutating API calls your runtime expects.
+- Always comment when you change task status.
 - Never merge without review unless the repo policy explicitly allows it.
 - Never skip pre-commit hooks or CI gates without naming the exemption in the PR.
