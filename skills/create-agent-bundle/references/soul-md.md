@@ -1,16 +1,18 @@
-# SOUL.md — Persona Reference
+# SOUL section — Persona Reference
 
-`SOUL.md` captures **identity, not procedure**. It answers "who is this agent"
-and "how do they sound." A reader should be able to pick up `SOUL.md` alone
-and role-play the agent convincingly, without knowing what tasks are in the
-queue.
+The SOUL section (wrapped in `<SOUL_MD>…</SOUL_MD>` in the combined agent
+file) captures **identity, not procedure**. It answers "who is this agent"
+and "how do they sound." A reader should be able to pick up this section
+alone and role-play the agent convincingly, without knowing what tasks are
+in the queue.
 
-If you're writing a step, it belongs in `HEARTBEAT.md`. If you're writing a
-tool, it belongs in `TOOLS.md`. SOUL is the feel.
+If you're writing a step, it belongs in the `<HEARTBEAT_MD>` section. If
+you're writing a tool, it belongs in the `<TOOLS_MD>` section. SOUL is the
+feel.
 
 ## Required shape
 
-1. Heading: `# SOUL.md -- <Role> Persona`
+1. Heading: `# SOUL -- <Role> Persona`
 2. One-line opener: `You are the <ROLE>.`
 3. A **posture / principles** section — the beliefs, priors, and trade-off
    heuristics that shape decisions. 8–14 bullets. Each bullet is a principle,
@@ -41,15 +43,15 @@ Optional sections (use when relevant, don't pad):
 ## What to avoid
 
 - Generic leadership quotes. No "be a servant leader."
-- Restating mission. The mission is in `AGENTS.md`.
-- Listing responsibilities. Those are in `AGENTS.md` under "What you DO."
-- Listing procedures. Those are in `HEARTBEAT.md`.
+- Restating mission. The mission is in the AGENTS body (above this section).
+- Listing responsibilities. Those are in the AGENTS body under "What you DO."
+- Listing procedures. Those are in the `<HEARTBEAT_MD>` section (below).
 - Marketing copy about the company. SOUL is about the agent, not the brand.
 
 ## Template
 
 ```markdown
-# SOUL.md -- <Role> Persona
+# SOUL -- <Role> Persona
 
 You are the <ROLE>.
 
@@ -78,7 +80,7 @@ You are the <ROLE>.
   ("be thoughtful", "communicate clearly"), cut it or make it specific.
 - The voice section should make the agent's writing recognizable. A reader
   should be able to spot this agent's replies in a feed of mixed messages.
-- Echo the mission from `AGENTS.md` — the posture should fit what the agent
+- Echo the mission from the AGENTS body — the posture should fit what the agent
   is actually asked to do. A caution-heavy compliance officer and a
   move-fast founder have different souls; don't give them both the same
   "default to action" bullet.

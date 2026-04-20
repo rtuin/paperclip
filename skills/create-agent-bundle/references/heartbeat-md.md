@@ -1,15 +1,16 @@
-# HEARTBEAT.md — Execution Loop Reference
+# HEARTBEAT section — Execution Loop Reference
 
-`HEARTBEAT.md` is the **checklist the agent runs every time it wakes up**. It
-is procedural, observable, and in a fixed order. A reader should be able to
-watch the agent work and tick each step off.
+The HEARTBEAT section (wrapped in `<HEARTBEAT_MD>…</HEARTBEAT_MD>` in the
+combined agent file) is the **checklist the agent runs every time it wakes
+up**. It is procedural, observable, and in a fixed order. A reader should
+be able to watch the agent work and tick each step off.
 
-Where `SOUL.md` is "how you think" and `AGENTS.md` is "what you own,"
-`HEARTBEAT.md` is "what you do, in order, right now."
+Where the `<SOUL_MD>` section is "how you think" and the AGENTS body is
+"what you own," HEARTBEAT is "what you do, in order, right now."
 
 ## Required shape
 
-1. Heading: `# HEARTBEAT.md -- <Role> Heartbeat Checklist`
+1. Heading: `# HEARTBEAT -- <Role> Loop`
 2. One-line opener describing when to run this checklist ("Run on every
    heartbeat.").
 3. Numbered sections, each corresponding to a phase of the loop. Typical
@@ -39,22 +40,22 @@ instructions ("reflect on priorities") are useless to a runtime.
 - **Ordered.** The heartbeat is a total order. If two steps can run in
   either order, they're probably one step.
 - **Short.** Each step should fit on a screen. If it doesn't, split it or
-  push detail into a reference doc under the bundle.
+  push detail into a note file the agent can reference.
 - **Include commands.** Where an API or CLI is involved, show the exact
   invocation. Fenced blocks, not prose.
 - **Include the exit condition.** What makes a step "done" for this wake?
 
 ## What NOT to put here
 
-- Persona / voice — that's `SOUL.md`.
-- Tool catalogues — that's `TOOLS.md`.
-- Policy (what the agent refuses to do) — that's `AGENTS.md`.
+- Persona / voice — that's the `<SOUL_MD>` section.
+- Tool catalogues — that's the `<TOOLS_MD>` section.
+- Policy (what the agent refuses to do) — that's the AGENTS body.
 - Long background context. Link to it; don't inline it.
 
 ## Template
 
 ```markdown
-# HEARTBEAT.md -- <Role> Heartbeat Checklist
+# HEARTBEAT -- <Role> Loop
 
 Run this checklist every time you wake. It covers <summary of the loop>.
 

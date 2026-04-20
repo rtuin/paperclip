@@ -1,30 +1,34 @@
 ---
 name: create-agent-bundle
 description: >
-  Generate a four-file agent bundle (AGENTS.md, SOUL.md, HEARTBEAT.md, TOOLS.md)
-  that defines a long-running, filesystem-backed agent. Use when the user asks
-  to "create an agent", "scaffold an agent", "write a soul file", or otherwise
-  wants a durable markdown agent definition that any runtime (Claude Code
-  harness, OpenClaw/NanoClaw, Paperclip, a bespoke loop) can load as its
-  personality plus operating loop. This skill writes files; it does NOT call
+  Generate a Claude Code agent definition file (~/.claude/agents/<role>.md or
+  .claude/agents/<role>.md) that embeds a full OpenClaw-style persona bundle
+  — AGENTS body, SOUL, HEARTBEAT, TOOLS — as one file the user can launch
+  with `claude --agent <role>`. Use when the user asks to "create an agent",
+  "scaffold an agent", "write a soul file", or otherwise wants a durable
+  markdown agent definition. This skill writes one file; it does NOT call
   any control-plane API.
 ---
 
 # Create Agent Bundle
 
-Use this skill when the user wants to scaffold an agent as a set of markdown
-files. The output is a runtime-agnostic bundle: a single entry file
-(`AGENTS.md`) that references three siblings describing identity (`SOUL.md`),
-loop (`HEARTBEAT.md`), and capabilities (`TOOLS.md`).
+Use this skill when the user wants to scaffold a long-running agent persona
+for Claude Code. The output is a **single file** at either
+`~/.claude/agents/<role>.md` (user-level) or `./.claude/agents/<role>.md`
+(project-level) that Claude Code loads via `claude --agent <role>`.
 
-This convention was popularized by OpenClaw/NanoClaw and is used by several
-orchestrators (Paperclip's `claude_local` adapter, bare Claude Code harnesses,
-custom loops). The files themselves have no vendor lock-in — they're just
-markdown.
+The file combines four concerns that the OpenClaw/NanoClaw / Paperclip
+convention keeps in four sibling files:
 
-This is NOT for creating Claude Code sub-agents (those live in
-`.claude/agents/*.md` with YAML frontmatter and are a different format). This
-is for "proper" agents: long-running personas with an execution loop.
+- **AGENTS body** — identity, scope, delegation, safety (inlined as the
+  opening of the file, below YAML frontmatter)
+- **SOUL** — persona, posture, voice & tone (wrapped in `<SOUL_MD>…</SOUL_MD>`)
+- **HEARTBEAT** — the ordered loop the agent runs every wake (wrapped in
+  `<HEARTBEAT_MD>…</HEARTBEAT_MD>`)
+- **TOOLS** — tool inventory with usage notes (wrapped in `<TOOLS_MD>…</TOOLS_MD>`)
+
+Everything lands in one file so `claude --agent <role>` picks it up as the
+whole session's system prompt with zero additional wiring.
 
 ## When to invoke
 
@@ -32,27 +36,59 @@ Trigger on any of:
 
 - "create an agent", "scaffold an agent", "new agent"
 - "write a soul.md", "generate AGENTS.md for X"
-- "I need a CTO agent" / "scaffold an X" when the user wants files
-- "agent files in the OpenClaw style"
+- "I need a CTO agent" / "scaffold an X" when the user wants a file to launch
+- "agent in the OpenClaw style"
 
 Do NOT invoke for:
 
-- Claude Code sub-agents in `.claude/agents/` — those use a different schema.
-- Hiring via a running orchestrator's API (e.g. a live Paperclip instance) —
-  use that orchestrator's own create-agent workflow.
+- Claude Code project subagents that are meant to be delegated to mid-session
+  only (they use the same file format but tend to be narrower, task-dispatch
+  personas rather than full session personas). This skill is fine for both;
+  just note that a full persona agent is heavier than a "code reviewer"
+  subagent by design.
 
-## The bundle shape
+## The output shape
 
+One file. This is exactly what lands on disk:
+
+```markdown
+---
+name: <role-slug>
+description: <one-line trigger / mission description>
+---
+
+You are the <ROLE>. <Scope sentence: what you own and what you don't.>
+
+<AGENTS body — delegation/execution rules, what you DO, what you DON'T,
+ memory & planning, safety considerations. End with a short pointer to the
+ three embedded sections below.>
+
+<SOUL_MD>
+# SOUL -- <Role> Persona
+
+<Posture / Mindset bullets — 8 to 14, each a named trade-off or behavioral
+ principle.>
+
+## Voice and Tone
+
+<6 to 12 bullets. Specific writing rules the reader could catch you
+ violating.>
+</SOUL_MD>
+
+<HEARTBEAT_MD>
+# HEARTBEAT -- <Role> Loop
+
+<Numbered checklist the agent runs every wake. Identity → planning →
+ assignments → work → delegate → fact extraction → exit.>
+</HEARTBEAT_MD>
+
+<TOOLS_MD>
+# Tools
+
+<Either the "(Your tools will go here...)" stub for a new agent, or a real
+ inventory organized by category with what/when/how/gotchas.>
+</TOOLS_MD>
 ```
-<target-dir>/
-  AGENTS.md      # entry file. Loaded first. References the others.
-  SOUL.md        # persona: beliefs, posture, voice, tone
-  HEARTBEAT.md   # numbered checklist the agent runs every wake
-  TOOLS.md       # tools the agent can use, with usage notes
-```
-
-`AGENTS.md` is the **entry** — most runtimes pick it up by name. The other
-three are sibling references that `AGENTS.md` tells the agent to read.
 
 ## Workflow
 
@@ -61,108 +97,116 @@ three are sibling references that `AGENTS.md` tells the agent to read.
 Ask the user (one compact question block, not a quiz):
 
 1. **Role** — short slug and human title (e.g. `cto` / "Chief Technology Officer").
-2. **Mission** — one sentence: what does this agent exist to accomplish?
-3. **Scope of ownership** — what they own; what they delegate; what they refuse.
-4. **Reporting** — do they report to someone, and do they have reports?
-5. **Voice/tone** — direct, warm, terse, scholarly? Any forbidden phrases?
-6. **Runtime (optional)** — where will this run (Claude Code, OpenClaw,
-   Paperclip, custom harness)? Only ask if it changes what you write into
-   `HEARTBEAT.md` or `TOOLS.md`. If the user doesn't know or doesn't care,
-   default to runtime-agnostic prose.
-7. **Tools** — which external systems, CLIs, or APIs this agent uses.
-8. **Target directory** — absolute path where the bundle should land. Default:
-   `./agents/<role-slug>/` under the current working directory.
+   The slug becomes both the filename (`<slug>.md`) and the YAML `name` field.
+2. **Description** — one line: when should Claude Code pick up this agent? This
+   becomes the YAML `description` field and drives auto-delegation if the
+   agent is ever invoked as a subagent.
+3. **Mission** — one sentence: what does this agent exist to accomplish?
+4. **Scope of ownership** — what they own; what they delegate; what they refuse.
+5. **Reporting** — do they report to someone, and do they have reports?
+6. **Voice/tone** — direct, warm, terse, scholarly? Any forbidden phrases?
+7. **Tools** — which external systems, CLIs, or APIs this agent uses. Optional:
+   a restricted `tools:` frontmatter list (e.g. `tools: Read, Edit, Bash, Grep`)
+   if the user wants to constrain what Claude Code exposes. Default: omit the
+   field and let the agent inherit the full toolset.
+8. **Location** — `~/.claude/agents/` (user-level, available in every project)
+   or `./.claude/agents/` (project-level, only when `cwd` is this project).
+   Default: ask; don't assume.
 
-If the user gave you a rich brief already (a paragraph describing the role),
-infer answers and confirm the inferences in a short bulleted summary before
-writing files. Do not block on questions you can answer from context.
+If the user gave you a rich brief already, infer answers and confirm the
+inferences in a short bulleted summary before writing. Do not block on
+questions you can answer from context.
 
-### 2. Draft the four files
+### 2. Draft each concern separately, then serialize
 
-Work through the files in this order. Quality bars are in each reference doc —
-read the reference before drafting that file.
+Quality bars are in each reference doc — read the reference before drafting
+that concern.
 
-1. `AGENTS.md` — entry. Read [references/agents-md.md](references/agents-md.md).
-2. `SOUL.md` — persona. Read [references/soul-md.md](references/soul-md.md).
-3. `HEARTBEAT.md` — loop. Read [references/heartbeat-md.md](references/heartbeat-md.md).
-4. `TOOLS.md` — tools. Read [references/tools-md.md](references/tools-md.md).
+1. AGENTS body — [references/agents-md.md](references/agents-md.md)
+2. SOUL — [references/soul-md.md](references/soul-md.md)
+3. HEARTBEAT — [references/heartbeat-md.md](references/heartbeat-md.md)
+4. TOOLS — [references/tools-md.md](references/tools-md.md)
 
-Keep the four files coherent with each other. The mission stated in `AGENTS.md`
-must be reflected by `SOUL.md`'s posture and `HEARTBEAT.md`'s checklist.
+Keep the concerns coherent. The mission stated at the top must be reflected
+by SOUL's posture and HEARTBEAT's checklist. Don't duplicate content across
+sections: AGENTS body is identity + rules, SOUL is voice + principles,
+HEARTBEAT is ordered procedure, TOOLS is inventory.
 
-If the user named a specific runtime, you may bind concrete endpoints, env
-vars, or CLI commands in `HEARTBEAT.md` / `TOOLS.md`. Otherwise, keep those
-files runtime-agnostic — use placeholders like `<orchestrator>` / `<task-id
-env var>` / "your task-tracker API" and let the operator bind them later.
+Once all four are drafted, concatenate into a single file with this exact
+structure:
+
+- YAML frontmatter: `name`, `description`, and any optional fields
+  (`tools`, `model`) the user asked for.
+- AGENTS body inlined directly (no wrapping tag — this is the "main" system
+  prompt).
+- `<SOUL_MD>…</SOUL_MD>` block.
+- `<HEARTBEAT_MD>…</HEARTBEAT_MD>` block.
+- `<TOOLS_MD>…</TOOLS_MD>` block.
+
+Rewrite the `## References` block at the end of the AGENTS body to point to
+the embedded tag sections below it (`<SOUL_MD>`, `<HEARTBEAT_MD>`,
+`<TOOLS_MD>`) — NOT to sibling files on disk, which no longer exist.
 
 ### 3. Write to disk
 
-Create the target directory if it does not exist. Write the four files. Do not
-overwrite existing files without confirming; if a file already exists, show the
-user what would change and ask.
+Target path is `~/.claude/agents/<slug>.md` or `./.claude/agents/<slug>.md`,
+based on the user's answer in step 1.
+
+Create the parent directory (`mkdir -p`) if it doesn't exist. If the target
+file already exists, show the user a diff of what would change and ask
+before overwriting.
 
 ### 4. Report
 
 Print a short summary:
 
-- target path
-- role + title
+- target path (absolute)
+- role slug + description (first line of YAML)
 - one-line mission
-- list of files written, with byte sizes or line counts
-- next step suggestion (how to plug this bundle into a runtime — see
-  "Wiring into a runtime" below)
+- file size / line count
+- the exact command to launch: `claude --agent <slug>`
 
-## Wiring into a runtime
+## Launching the agent
 
-The bundle is runtime-agnostic. Common wiring patterns:
+After the file lands, the user runs:
 
-- **Bare Claude Code / CLI harness**: concatenate the files as the system
-  prompt, or pass `AGENTS.md` via an `--append-system-prompt-file`-style flag
-  and let the agent itself read the siblings at runtime. Point Claude Code at
-  the bundle directory as its working directory so relative paths resolve.
-- **Claude Code sub-agent wrapper**: have your sub-agent's system prompt
-  include `Read ./AGENTS.md and the three sibling files before starting.`
-  Keep the sub-agent's own frontmatter tight — the bundle carries the body.
-- **OpenClaw / NanoClaw**: point the agent's working directory at the bundle
-  root. The runtime resolves `AGENTS.md` as the primary instruction file and
-  `SOUL.md` / `HEARTBEAT.md` / `TOOLS.md` as sibling references.
-- **Paperclip `claude_local` adapter**: set `adapterConfig.instructionsFilePath`
-  to the absolute path of the bundle's `AGENTS.md`. The adapter loads it and
-  the sibling files automatically.
-- **Bespoke orchestrator / cron loop**: read and inline all four files into
-  the system prompt each wake, or mount the directory and instruct the agent
-  to re-read it on every invocation.
+```bash
+claude --agent <slug>
+```
+
+Claude Code resolves the agent from (first match wins): managed settings →
+`--agents` CLI JSON → `.claude/agents/` in cwd → `~/.claude/agents/` →
+plugin agents. The whole file body becomes the session's system prompt; the
+YAML frontmatter drives metadata and optional tool/model restrictions.
 
 ## Quality bar
 
 Before finishing:
 
-- `AGENTS.md` MUST open with `You are the <ROLE>.` and end with a reference
-  block that lists the three sibling files.
-- `SOUL.md` MUST have a `## Voice and Tone` section and a posture/principles
-  section — abstract beliefs, not task instructions.
-- `HEARTBEAT.md` MUST be runnable as a numbered checklist. Each step is
+- The file is valid Claude Code agent shape: YAML frontmatter with at least
+  `name` and `description`, followed by markdown body.
+- AGENTS body MUST open with `You are the <ROLE>.` and end with a reference
+  block pointing to the three embedded tag sections.
+- SOUL section MUST have a `## Voice and Tone` subsection and a posture/
+  principles subsection — abstract beliefs, not task instructions.
+- HEARTBEAT section MUST be runnable as a numbered checklist. Each step
   concrete and observable. No vague "think about X".
-- `TOOLS.md` SHOULD be populated if tools are known; otherwise leave the
-  "(Your tools will go here...)" stub so the agent can append as it acquires
-  tools. Never invent tools that don't exist.
-- Do not duplicate content across files. `AGENTS.md` summarizes and links;
-  `SOUL.md` is identity; `HEARTBEAT.md` is procedure; `TOOLS.md` is inventory.
-- Keep each file skimmable. Short sentences. Bullets over prose.
+- TOOLS section SHOULD be populated if the user named tools; otherwise
+  leave the "(Your tools will go here...)" stub. Never invent tools.
+- Do not duplicate content across sections.
+- Keep each section skimmable. Short sentences. Bullets over prose.
 - No emoji unless the user asked.
-- No placeholder text like `TODO: fill this in` in the final files. Either
+- No placeholder text like `TODO: fill this in` in the final file. Either
   write real content or remove the section.
-- If the user didn't name a runtime, don't hardcode one. Prefer
-  `<orchestrator>` / `<task-tracker>` placeholders over a concrete API.
 
 ## Examples
 
-Two reference bundles live under `references/examples/`:
+Two reference agents live under `references/examples/`:
 
-- `references/examples/cto/` — engineering leader with reports
-- `references/examples/engineer/` — individual contributor with no reports
+- `references/examples/cto.md` — engineering leader with reports
+- `references/examples/engineer.md` — individual contributor with no reports
 
-Both are deliberately runtime-agnostic — they show the *shape* of a good
-bundle without binding to a specific orchestrator's API. Read them when you
-need a concrete shape. Do not copy them verbatim: the agent's mission and
-voice must be specific to what the user asked for.
+Both show the exact output shape of this skill (YAML frontmatter + inlined
+AGENTS body + three tag-wrapped sections) in a runtime-agnostic style. Read
+them when you need a concrete shape. Do not copy them verbatim — the
+agent's mission and voice must be specific to what the user asked for.

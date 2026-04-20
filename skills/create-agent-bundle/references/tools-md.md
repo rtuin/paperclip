@@ -1,9 +1,11 @@
-# TOOLS.md — Tool Inventory Reference
+# TOOLS section — Tool Inventory Reference
 
-`TOOLS.md` is the **living inventory of tools the agent can reach**. It's the
-file the agent updates itself as it acquires, uses, and retires capabilities.
+The TOOLS section (wrapped in `<TOOLS_MD>…</TOOLS_MD>` in the combined agent
+file) is the **living inventory of tools the agent can reach**. It's the
+section the agent updates itself as it acquires, uses, and retires
+capabilities.
 
-At bundle creation time, the file is often near-empty — that's fine. The
+At agent creation time, this section is often near-empty — that's fine. The
 purpose is to reserve the slot so the agent has a canonical place to write
 "I can now do X" as it learns.
 
@@ -76,9 +78,9 @@ solves and what alternative you should prefer when.
 
 ## What NOT to put here
 
-- Persona or voice. That's `SOUL.md`.
-- Operational procedure (the ordered loop). That's `HEARTBEAT.md`.
-- Delegation policy or scope. That's `AGENTS.md`.
+- Persona or voice. That's the `<SOUL_MD>` section.
+- Operational procedure (the ordered loop). That's the `<HEARTBEAT_MD>` section.
+- Delegation policy or scope. That's the AGENTS body (top of the file).
 - Full API reference documentation. Link to it; don't inline it.
 
 ## Common categories to suggest when prompting the user

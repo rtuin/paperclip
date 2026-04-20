@@ -1,8 +1,14 @@
-# AGENTS.md — Entry File Reference
+# AGENTS body — Identity & Rules Reference
 
-`AGENTS.md` is the entry point adapters load first. It is the shortest file in
-the bundle and acts as a table of contents that tells the agent how to behave
-in broad strokes and which sibling files to consult for detail.
+The AGENTS body is the opening section of the combined agent file — what
+sits directly below the YAML frontmatter and above the `<SOUL_MD>` /
+`<HEARTBEAT_MD>` / `<TOOLS_MD>` tag blocks. It is the shortest of the four
+concerns and acts as a table of contents: identity, scope, delegation
+rules, and pointers to the three embedded sections below it.
+
+(This content used to live in a separate `AGENTS.md` file — hence the name.
+The skill now inlines it into the single Claude Code agent file, but the
+writing guidance is the same.)
 
 ## Required shape
 
@@ -15,8 +21,11 @@ in broad strokes and which sibling files to consult for detail.
    bullets, concrete.
 5. A `## Safety Considerations` section — at minimum: never exfiltrate secrets,
    never run destructive commands without explicit authorization.
-6. A `## References` block at the bottom that names `./HEARTBEAT.md`,
-   `./SOUL.md`, and `./TOOLS.md` with one-line descriptions.
+6. A `## References` block at the bottom that names the three embedded tag
+   sections (`<SOUL_MD>`, `<HEARTBEAT_MD>`, `<TOOLS_MD>`) with one-line
+   descriptions. These are sections within the same file, not sibling files
+   on disk — the reference block tells the agent where to look for its
+   persona, loop, and tool inventory.
 
 ## Voice rules
 
@@ -71,11 +80,11 @@ you cannot resolve — not when work is merely hard.
 
 ## References
 
-These files are essential. Read them.
+These embedded sections are essential. Read them.
 
-- `./SOUL.md` — who you are and how you should act.
-- `./HEARTBEAT.md` — execution checklist. Run every heartbeat.
-- `./TOOLS.md` — tools you have access to.
+- `<SOUL_MD>` — who you are and how you should act.
+- `<HEARTBEAT_MD>` — execution checklist. Run every heartbeat.
+- `<TOOLS_MD>` — tools you have access to.
 ```
 
 ## Quality bar
@@ -84,6 +93,7 @@ These files are essential. Read them.
 - The "DO / DON'T" asymmetry is the most load-bearing part. Be concrete about
   what the agent refuses to do — that's what keeps managers from rewriting
   their reports' code.
-- If you find yourself writing voice/tone guidance, move it to `SOUL.md`.
-- If you find yourself writing step-by-step procedure, move it to
-  `HEARTBEAT.md`.
+- If you find yourself writing voice/tone guidance, move it into the
+  `<SOUL_MD>` section.
+- If you find yourself writing step-by-step procedure, move it into the
+  `<HEARTBEAT_MD>` section.
