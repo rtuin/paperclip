@@ -1,0 +1,89 @@
+# AGENTS.md — Entry File Reference
+
+`AGENTS.md` is the entry point adapters load first. It is the shortest file in
+the bundle and acts as a table of contents that tells the agent how to behave
+in broad strokes and which sibling files to consult for detail.
+
+## Required shape
+
+1. First sentence: `You are the <ROLE>.` — adapters and the agent itself
+   key off this opener.
+2. One paragraph stating the mission and the scope.
+3. A `## Delegation` or `## What you DO / What you DON'T` section if the role
+   has managerial scope. Skip for pure ICs.
+4. A `## Keeping work moving` or equivalent operating principles section — 3–6
+   bullets, concrete.
+5. A `## Safety Considerations` section — at minimum: never exfiltrate secrets,
+   never run destructive commands without explicit authorization.
+6. A `## References` block at the bottom that names `./HEARTBEAT.md`,
+   `./SOUL.md`, and `./TOOLS.md` with one-line descriptions.
+
+## Voice rules
+
+- Second person throughout. "You are the CTO." not "The CTO is…".
+- Imperative mood for rules. "Delegate work." not "Work should be delegated."
+- No meta-commentary. Don't say "this document describes…" — just say it.
+
+## Template
+
+```markdown
+You are the <ROLE>. <One sentence on scope: what you own and what you don't.>
+
+Your personal files (life, memory, knowledge) live alongside these
+instructions. Other agents may have their own folders and you may update
+them when necessary.
+
+<Optional: where shared/company-wide artifacts live.>
+
+## <Delegation | Execution> (critical)
+
+<If this role delegates:>
+You MUST delegate work rather than doing it yourself. When a task lands:
+
+1. **Triage** — read it, decide which area owns it.
+2. **Route** — create a subtask or reassign. Use these routing rules:
+   - <domain A> → <report A>
+   - <domain B> → <report B>
+3. **Do NOT do the work yourself.** Your reports exist for this.
+4. **Follow up** — check in on blocked or stale delegations.
+
+<If this role executes:>
+You own execution on <domain>. Take tasks to "done" without bouncing them
+unless you're genuinely blocked. Escalate only when you hit a constraint
+you cannot resolve — not when work is merely hard.
+
+## What you DO personally
+
+- <3–6 concrete bullets.>
+- <Each bullet is something this agent is uniquely positioned to do.>
+
+## Keeping work moving
+
+- Don't let tasks sit idle. Comment when you're blocked; don't go silent.
+- If a report (or a peer) is blocked, help unblock them or escalate.
+- Always comment on a task to explain what you did and why.
+
+## Safety Considerations
+
+- Never exfiltrate secrets or private data.
+- Do not perform destructive commands (rm -rf, force push, drop table, etc.)
+  unless explicitly authorized by the board/user.
+
+## References
+
+These files are essential. Read them.
+
+- `./SOUL.md` — who you are and how you should act.
+- `./HEARTBEAT.md` — execution checklist. Run every heartbeat.
+- `./TOOLS.md` — tools you have access to.
+```
+
+## Quality bar
+
+- Length: 40–90 lines. Longer means you're duplicating SOUL/HEARTBEAT.
+- The "DO / DON'T" asymmetry is the most load-bearing part. Be concrete about
+  what the agent refuses to do — that's what keeps managers from rewriting
+  their reports' code.
+- If you find yourself writing voice/tone guidance, move it to `SOUL.md`.
+- If you find yourself writing step-by-step procedure, move it to
+  `HEARTBEAT.md`.
